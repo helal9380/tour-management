@@ -12,7 +12,7 @@ const startServer = async () => {
     console.log("conected to DB");
 
     server = app.listen(envVars.PORT, () => {
-      console.log(`tour management running on post ${envVars.PORT}`);
+      console.log(`tour management running on port ${envVars.PORT}`);
     });
   } catch (error) {
     console.log(error);
