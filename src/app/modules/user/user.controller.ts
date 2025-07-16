@@ -19,6 +19,21 @@ const createUser = catchAsync(
     });
   }
 );
+const updateUser = catchAsync(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.id;
+    const verifiedToken = req.user;
+    const user = await UserService.updateUser(userId, req.body, verifiedToken);
+
+    sendResponse(res, {
+      success: true,
+      message: "User updated successfully",
+      data: user,
+      statusCode: httpStatusCode.OK,
+    });
+  }
+);
 
 const getAllUsers = catchAsync(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -38,4 +53,5 @@ const getAllUsers = catchAsync(
 export const UserContorller = {
   createUser,
   getAllUsers,
+  updateUser,
 };
