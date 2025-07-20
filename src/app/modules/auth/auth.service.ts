@@ -2,9 +2,13 @@
 
 import bcryptjs from "bcryptjs";
 import httpStatus from "http-status-codes";
+import { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../../config/env";
 import AppEror from "../../errorHelpers/appError";
-import { generateToken } from "../../utils/jwt";
+import {
+  createNewAccessTokenWithRefreshToken,
+  getUserToken,
+} from "../../utils/getUserToken";
 import { IUser } from "../user/user.interface";
 import { User } from "../user/user.model";
 
@@ -24,23 +28,49 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
     throw new AppEror(httpStatus.BAD_GATEWAY, "Incorrect password");
   }
 
-  const jwtPayload = {
-    email: isUserExist.email,
-    role: isUserExist.role,
-    userId: isUserExist._id,
-  };
-
-  const accessToken = generateToken(
-    jwtPayload,
-    envVars.JWT_SECRET,
-    envVars.JWT_ACCESS_EXPIRES
-  );
+  const { accessToken, refreshToken } = getUserToken(isUserExist);
 
   return {
     accessToken,
+    refreshToken,
+    user: isUserExist,
   };
 };
+const getRefreshToken = async (refreshToken: string) => {
+  const newAccessToken = await createNewAccessTokenWithRefreshToken(
+    refreshToken
+  );
+  return {
+    accessToken: newAccessToken,
+  };
+};
+const resetPassword = async (
+  oldPassword: string,
+  newPassword: string,
+  decodedToken: JwtPayload
+) => {
+  const user = await User.findById(decodedToken.userId);
 
+  const isOldPasswordMatch = await bcryptjs.compare(
+    oldPassword,
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    user!.password as string
+  );
+  if (!isOldPasswordMatch) {
+    throw new AppEror(httpStatus.UNAUTHORIZED, "Old Password does not match");
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  user!.password = await bcryptjs.hash(
+    newPassword,
+    Number(envVars.JWT_SALT_ROUND)
+  );
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  user!.save();
+};
 export const AuthServices = {
   credentialsLogin,
+  getRefreshToken,
+  resetPassword,
 };
