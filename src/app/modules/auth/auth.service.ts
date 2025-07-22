@@ -5,37 +5,33 @@ import httpStatus from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../../config/env";
 import AppEror from "../../errorHelpers/appError";
-import {
-  createNewAccessTokenWithRefreshToken,
-  getUserToken,
-} from "../../utils/getUserToken";
-import { IUser } from "../user/user.interface";
+import { createNewAccessTokenWithRefreshToken } from "../../utils/getUserToken";
 import { User } from "../user/user.model";
 
-const credentialsLogin = async (payload: Partial<IUser>) => {
-  const { email, password } = payload;
+// const credentialsLogin = async (payload: Partial<IUser>) => {
+//   const { email, password } = payload;
 
-  const isUserExist = await User.findOne({ email });
-  const isPasswordMatched = await bcryptjs.compare(
-    password as string,
-    isUserExist?.password as string
-  );
+//   const isUserExist = await User.findOne({ email });
+//   const isPasswordMatched = await bcryptjs.compare(
+//     password as string,
+//     isUserExist?.password as string
+//   );
 
-  if (!isUserExist) {
-    throw new AppEror(httpStatus.BAD_REQUEST, "Email does't exist");
-  }
-  if (!isPasswordMatched) {
-    throw new AppEror(httpStatus.BAD_GATEWAY, "Incorrect password");
-  }
+//   if (!isUserExist) {
+//     throw new AppEror(httpStatus.BAD_REQUEST, "Email does't exist");
+//   }
+//   if (!isPasswordMatched) {
+//     throw new AppEror(httpStatus.BAD_GATEWAY, "Incorrect password");
+//   }
 
-  const { accessToken, refreshToken } = getUserToken(isUserExist);
+//   const { accessToken, refreshToken } = getUserToken(isUserExist);
 
-  return {
-    accessToken,
-    refreshToken,
-    user: isUserExist,
-  };
-};
+//   return {
+//     accessToken,
+//     refreshToken,
+//     user: isUserExist,
+//   };
+// };
 const getRefreshToken = async (refreshToken: string) => {
   const newAccessToken = await createNewAccessTokenWithRefreshToken(
     refreshToken
@@ -70,7 +66,6 @@ const resetPassword = async (
   user!.save();
 };
 export const AuthServices = {
-  credentialsLogin,
   getRefreshToken,
   resetPassword,
 };

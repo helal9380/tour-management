@@ -14,7 +14,14 @@ export const globalError = (
   let statusCode = 500;
   let message = `Something went wrong!! ${err.message} from global error`;
 
-  if (err instanceof AppEror) {
+  if (err.code === 11000) {
+    const errorArray = err.message.match(/"([^"]*)"/);
+    statusCode = 400;
+    message = `${errorArray[1]} already exist!`;
+  } else if (err.name === "CastError") {
+    statusCode = 400;
+    message = "Invalid ObjectId.  Please provide a currect Id";
+  } else if (err instanceof AppEror) {
     statusCode = err.statusCode;
     message = err.message;
   } else if (err instanceof Error) {
@@ -24,7 +31,7 @@ export const globalError = (
   res.status(statusCode).json({
     success: false,
     message,
-    err,
+    err: envVars.NODE_ENV === "development" ? err : null,
     stack: envVars.NODE_ENV === "development" ? err.stack : null,
   });
 };
